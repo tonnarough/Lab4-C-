@@ -70,14 +70,14 @@
 ---
 
 ***Линейная диаграмма точности:***
-![J1vzYmQ9LJ4](https://user-images.githubusercontent.com/58634989/112756949-258f3f80-8ff0-11eb-9976-c8f07b7e063c.jpg)
+![qFumIxLm6No](https://user-images.githubusercontent.com/58634989/112846456-bd536300-90ae-11eb-8a9d-4f2513d2c691.jpg)
 
-<img src="./epoch_categorical_accuracy_gaussian_noise.svg">
+<img src="./epoch_categorical_accuracy_crop.svg">
 
 ***Линейная диаграмма потерь:*** 
-![Z_vkIfGGiYo](https://user-images.githubusercontent.com/58634989/112756968-350e8880-8ff0-11eb-870d-4df87f3ccead.jpg)
+![2kfqQxVPH7A](https://user-images.githubusercontent.com/58634989/112846490-c93f2500-90ae-11eb-9d0b-6b7de068ec2f.jpg)
 
- <img src="./epoch_loss_gaussian_noise.svg">  
+ <img src="./epoch_loss_crop.svg">  
  
 ***Анализ результатов:*** 
  
