@@ -22,7 +22,7 @@ def brightness(image, label):
 ```
 Функции возвращают `tf.image.adjust_brightness(image, delta)` и `tf.image.adjust_contrast(images, contrast_factor)` с параметрами: для яркости `image` - входное изображение и `delta` - величина для добавления к значениям пикселей, для контрастности `image` - входное изображение, `contrast_factor` - множитель для регулировки контрастности.
 
-Вызов функции производился в `TFRecordDataset`:
+Вызов функций производился в `TFRecordDataset`:
 ```
 return tf.data.TFRecordDataset(filenames)\
     .map(parse_proto_example, num_parallel_calls=tf.data.AUTOTUNE)\
@@ -229,12 +229,12 @@ Resizing(448,448) RandomCrop(224,224);
 ---
 
 ***Линейная диаграмма точности:***
-![qFumIxLm6No](https://user-images.githubusercontent.com/58634989/112846456-bd536300-90ae-11eb-8a9d-4f2513d2c691.jpg)
+![aFIpaE4mpFE](https://user-images.githubusercontent.com/58634989/112926726-887df500-911c-11eb-8fa6-50865a3d3dcb.jpg)
 
 <img src="./epoch_categorical_accuracy_crop.svg">
 
 ***Линейная диаграмма потерь:*** 
-![2kfqQxVPH7A](https://user-images.githubusercontent.com/58634989/112846490-c93f2500-90ae-11eb-9d0b-6b7de068ec2f.jpg)
+![inyhlRRAlTM](https://user-images.githubusercontent.com/58634989/112926749-929ff380-911c-11eb-9242-e38fee242461.jpg)
 
  <img src="./epoch_loss_crop.svg">  
  
@@ -284,6 +284,60 @@ Exp_Decay: initial_lrate = 0.01 и k = 0.3;
  * При Exp_Decay без аугментации данных и с параметрами `initial_lrate = 0.01 и k = 0.3;` сошелся на 28 эпохе, точность на валидационном наборе данных = 89.43%, потери = 0.2366.
 
 Можно сделать вывод, что использование техник аугментации данных привело во всех случаях к улучшению сходимости, для техник *Манипуляция с яркостью и контрастом* и *Добавление случайного шума* удалось добиться еще и увеличения точности на 0.67% и на 0.21% соответственно, а так же удалось уменьшить значение потерь на 0.0134 и на 0.0006 соответственно.
+
+Использование изученных техник аугментации данных с оптимальными параметрами в одном обучении
+---
+
+Для реализации добавляем 2 функции(Яркость/Контраст):
+```
+def contrast(image,label):
+  return tf.image.adjust_contrast(image, 2), label
+
+def brightness(image, label):
+  return tf.image.adjust_brightness(image, delta=0.1),label
+```
+
+Вызов функций производился в `TFRecordDataset`:
+```
+return tf.data.TFRecordDataset(filenames)\
+    .map(parse_proto_example, num_parallel_calls=tf.data.AUTOTUNE)\
+    .map(contrast)\
+    .map(brightness)\
+    .cache()\
+    .batch(batch_size)\
+    .prefetch(tf.data.AUTOTUNE)
+```
+Архитектуру нейронной сети дорабатываем следующим образом:
+```
+inputs = tf.keras.Input(shape=(RESIZE_TO, RESIZE_TO, 3))
+  x = tf.keras.layers.GaussianNoise(stddev = 0.05)(inputs)
+  x = tf.keras.layers.experimental.preprocessing.Resizing(235,235)(x)
+  x = tf.keras.layers.experimental.preprocessing.RandomCrop(224,224)(x)
+  x = tf.keras.layers.experimental.preprocessing.RandomRotation(factor =(0, 0.025))(x) 
+  model = EfficientNetB0(input_tensor=x,include_top=False,pooling='avg', weights='imagenet')
+  model.trainable=False
+  model = tf.keras.layers.Flatten()(model.output)
+  outputs = tf.keras.layers.Dense(NUM_CLASSES, activation = tf.keras.activations.softmax)(model)
+  return tf.keras.Model(inputs=inputs, outputs=outputs)
+```
+
+Графики обучения для нейронной сети EfficientNetB0(предварительно обученной на базе изображений imagenet) с использованием оптимальной политики изменения темпа обучения и одновременно со всеми изученными техниками аугментации данных(Манипуляция с яркостью и контрастом; Поворот изображения на случайный угол; Использование случайной части изображения; Добавление случайного шума) и сравнение с оптимальным темпом обучения Exp_Decay без аугментации
+---
+
+***Линейная диаграмма точности:***
+![GLlFaVQ-vOg](https://user-images.githubusercontent.com/58634989/112928239-e9a6c800-911e-11eb-980c-e79675d0340b.jpg)
+
+<img src="./epoch_categorical_accuracy_all_in.svg">
+
+***Линейная диаграмма потерь:*** 
+![jmPubu9ABmA](https://user-images.githubusercontent.com/58634989/112928255-f2979980-911e-11eb-95d9-5e9354ed3457.jpg)
+
+ <img src="./epoch_loss_all_in.svg">  
+ 
+***Анализ результатов:*** 
+
+
+
 
 
 
